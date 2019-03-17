@@ -9,11 +9,6 @@ passengers_test = pd.read_csv('test.csv')
 
 #print(passengers_train.describe(include="all"))
 
-print("Training")
-print(pd.isnull(passengers_train).sum())
-print("Testing")
-print(pd.isnull(passengers_test).sum())
-
 #Male/female survival rate visualization
 male_count = ((passengers_train['Sex']=='male').sum())
 female_count = ((passengers_train['Sex']=='female').sum())
@@ -120,11 +115,12 @@ for i in range(0, len(passengers_test['PassengerId'])):
 			passengers_test.at[i, 'Age'] = maleAgeTestMode
 		else:
 			passengers_test.at[i, 'Age'] = femaleAgeTestMode
+	if math.isnan(passengers_test['Fare'][i]):
+		pClass = passengers_test['Pclass'][i]
+		passengers_test.at[i, 'Fare'] = passengers_test.groupby('Pclass')['Fare'].mean()[int(pClass)]
 
 passengers_train = passengers_train.drop(['Cabin', 'Ticket'], axis = 1)
 passengers_test = passengers_test.drop(['Cabin', 'Ticket'], axis = 1)
 
 passengers_train = passengers_train.fillna({"Embarked": "S"})
 passengers_test = passengers_test.fillna({"Embarked": "S"})
-
-print(pd.isnull(passengers_test).sum())
