@@ -2,6 +2,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy
 import math
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 
 pd.set_option('display.max_columns', 20)
 passengers_train = pd.read_csv('train.csv')
@@ -21,10 +29,10 @@ femaleSurvivors = sexGroup['female'][1]
 plt.bar(['male', 'female'], [(maleSurvivors*100)/male_count, (femaleSurvivors*100)/female_count], width=0.3)
 plt.title('Survivors based on sex')
 plt.yticks(numpy.arange(0, 100, 5))
-plt.show()
+#plt.show()
 
 plt.pie([109, 231], labels=['male','female'], autopct='%1.1f%%')
-plt.show()
+#plt.show()
 
 #Class survival visualization
 class1_count = (passengers_train['Pclass']==1).sum()
@@ -40,7 +48,7 @@ plt.bar(['class1', 'class2', 'class3'],
 	[class1Survivors*100/class1_count, class2Survivors*100/class2_count, class3Survivors*100/class3_count])
 plt.title('Survivors based on class')
 plt.yticks(numpy.arange(0, 100, 5))
-plt.show()
+#plt.show()
 
 #ParCh survival visualization
 parChGroup = passengers_train.groupby('Parch')['Survived'].value_counts()
@@ -63,7 +71,7 @@ plt.bar(['0', '1', '2', '3', '4', '5', '6'],
 	parCh3Survivors*100/parCh3_count, 0, parCh5Survivors*100/parCh5_count, 0])
 plt.yticks(numpy.arange(0, 100, 5))
 plt.title('Survivors based on ParentChild')
-plt.show()
+#plt.show()
 
 #Age survival visualization
 sexAge = passengers_train.groupby('Sex')
@@ -99,7 +107,7 @@ plt.bar(['Unknown','Infant','Child','Teen','Student','Young Adult','Adult','Seni
 	color=['red', 'blue', 'green', 'yellow', 'orange', 'black', 'grey'])
 plt.yticks(numpy.arange(0, 100, 5))
 plt.title('Survivors based on age')
-plt.show()
+#plt.show()
 
 #Fill missing values for Age
 for i in range(0, len(passengers_train['Survived'])):
@@ -124,3 +132,64 @@ passengers_test = passengers_test.drop(['Cabin', 'Ticket'], axis = 1)
 
 passengers_train = passengers_train.fillna({"Embarked": "S"})
 passengers_test = passengers_test.fillna({"Embarked": "S"})
+
+embarked_mapping = {"S":1, "C":2, "Q":3}
+passengers_train['Embarked'] = passengers_train['Embarked'].map(embarked_mapping)
+passengers_test['Embarked'] = passengers_test['Embarked'].map(embarked_mapping)
+
+sex_mapping = {"male":0, "female":1}
+passengers_train['Sex'] = passengers_train['Sex'].map(sex_mapping)
+passengers_test['Sex'] = passengers_test['Sex'].map(sex_mapping)
+
+survived_train = passengers_train['Survived']
+passengers_train = passengers_train.drop(['Survived', 'PassengerId', 'Name'], axis = 1)
+
+X_train, X_test, Y_train, Y_test = train_test_split(passengers_train, survived_train, test_size = 0.25, random_state = 42)
+#Regression, SVC, KNearest, NaiveBayes, DecisionTree, RandomForest
+'''logRegression = LogisticRegression()
+logRegression.fit(X_train, Y_train)
+
+logRegressionPred = logRegression.predict(X_test)
+print("Logistic Regression", accuracy_score(Y_test, logRegressionPred), precision_score(Y_test, logRegressionPred),
+	recall_score(Y_test, logRegressionPred))
+
+svc = SVC(gamma = 'scale', C=100, kernel = 'linear')
+svc.fit(X_train, Y_train)
+
+svcPred = svc.predict(X_test)
+print("SVC", accuracy_score(Y_test, svcPred), precision_score(Y_test, svcPred),
+	recall_score(Y_test, svcPred))
+
+knn = KNeighborsClassifier(n_neighbors=18)
+knn.fit(X_train, Y_train)
+
+knnPred = knn.predict(X_test)
+print("KNN", accuracy_score(Y_test, knnPred), precision_score(Y_test, knnPred),
+	recall_score(Y_test, knnPred))
+
+gnb = GaussianNB()
+gnb.fit(X_train, Y_train)
+
+gnbPred = gnb.predict(X_test)
+print("Gaussian NB", accuracy_score(Y_test, gnbPred), precision_score(Y_test, gnbPred),
+	recall_score(Y_test, gnbPred))'''
+
+dtClassifier = DecisionTreeClassifier(min_samples_split=16, max_depth = 16)
+dtClassifier.fit(X_train, Y_train)
+
+dtClassifierPred = dtClassifier.predict(X_test)
+print("Decision Tree", accuracy_score(Y_test, dtClassifierPred), precision_score(Y_test, dtClassifierPred),
+	recall_score(Y_test, dtClassifierPred))
+
+'''randomForest = RandomForestClassifier(n_estimators=20, max_depth=4)
+randomForest.fit(X_train, Y_train)
+
+randomForestPred = randomForest.predict(X_test)
+print("Random Forest", accuracy_score(Y_test, randomForestPred), precision_score(Y_test, randomForestPred),
+	recall_score(Y_test, randomForestPred))'''
+
+ids = passengers_test['PassengerId']
+predictions = dtClassifier.predict(passengers_test.drop(['PassengerId', 'Name'], axis = 1))
+
+output = pd.DataFrame({'PassengerId' : ids, 'Survived' : predictions})
+output.to_csv('submission1.csv', index = False)
